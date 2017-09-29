@@ -1,0 +1,802 @@
+\documentclass{article}
+
+%\VignetteIndexEntry{Introduction to PCSmisc}
+%\VignettePackage{PCSmisc}
+\SweaveOpts{keep.source=TRUE}
+
+\usepackage{Sweave}
+\usepackage{fancyvrb}
+\usepackage{xcolor}
+\usepackage{xspace}
+\usepackage{arial}
+\usepackage{framed}
+
+
+\DefineVerbatimEnvironment{Sinput}{Verbatim}{fontshape=sl,formatcom=\color{blue!50!black}}
+\DefineVerbatimEnvironment{Soutput}{Verbatim}{formatcom=\color{blue!50!black}}
+\DefineVerbatimEnvironment{Scode}{Verbatim}{fontshape=sl,formatcom=\color{blue!50!black}}
+
+\newlength{\fancyvrbtopsep}
+\newlength{\fancyvrbpartopsep}
+\makeatletter
+\FV@AddToHook{\FV@ListParameterHook}{\topsep=\fancyvrbtopsep\partopsep=\fancyvrbpartopsep}
+\makeatother 
+
+\setlength{\fancyvrbtopsep}{0pt}
+\setlength{\fancyvrbpartopsep}{0pt} 
+
+% Definitions
+\newcommand{\slan}{{\tt S}\xspace}
+\newcommand{\spluslan}{{\tt S-PLUS}\xspace}
+\newcommand{\rlan}{{\tt R}\xspace}
+\newcommand{\pack}{{\tt PCSmisc}\xspace}
+\newcommand{\code}[1]{{\tt #1}}
+
+\newenvironment{tip}
+{\begin{framed}{\textbf{\textit{Tip:}}\xspace}}
+{\end{framed}}
+
+\setlength{\topmargin}{0in}
+\setlength{\headheight}{0in}
+\setlength{\headsep}{0in}
+\setlength{\parindent}{0in}
+\setlength{\parskip}{.1in}
+\setlength{\textwidth}{6.5in}
+\setlength{\textheight}{9in}
+\setlength{\oddsidemargin}{0in}
+
+\title{Introduction to \pack \\
+Constructing a NONMEM Data Set in \rlan}
+\author{Benjamin Rich\\(\code{benjamin.rich@certara.com})}
+
+<<echo=FALSE, results=hide>>=
+ps.options(pointsize=12)
+options(width=90)
+options(continue=" ")
+
+require(PCSmisc)
+@
+
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+This vignette introduces some of the functions in the \pack package by working
+through an example of the construction of a data set for population PK analysis
+with NONMEM.  It also attempts to be an example of good coding practices for
+this endeavor and makes some recommendations along the way.
+
+\begin{tip}
+Code should be written so that it can be read by a person.  Generally, code will
+be reviewed by somebody, so I try to write my code with that fact in mind (when
+I write code I imagine myself being the person having to review it).  It is
+unfair to write code that is messy and then expect the reviewer to make sense of
+it.  Thus, I try to write code that is clean, clear, concise, and easy to
+follow.  It is not enough for the code to merely produce the right results, it
+must be possible for someone reading the code to {\em verify} that it is
+correct.  As much as possible, the code should be self-explanatory and
+self-documenting (and not require many comments).
+\end{tip}
+
+\section{The data}
+
+For this example I will use toy data from an imaginary PK study
+that is included with \pack.  The data is contained in a database that spans
+several tables, each table corresponding to a \code{data.frame}.  These are
+loaded by:
+<<>>=
+data(pkstudy.DM)
+data(pkstudy.PC)
+data(pkstudy.EX)
+data(pkstudy.VS)
+data(pkstudy.LB)
+data(pkstudy.CM)
+@
+
+The data is meant to resemble a standard CDISC format.  Briefly, \code{DM}
+contains demographic data, \code{PC} contains pharmacokinetic concentrations,
+\code{EX} contains exposure data, \code{VS} contains vitals signs, \code{LB}
+contains laboratory tests, and \code{CM} contains data on concomitant
+medications.  All the data are linked by a \code{subjid} field, the ID that
+identifies the individual subjects in the study.  This field is a \code{factor}.
+
+\begin{tip}
+As a rule I recommend always using lowercase letters for variable names.  The
+reason is simple: they are much easier to type.  If a data set uses all
+uppercase letters for column names, I immediately change to lowercase using
+\code{names(x) <- tolower(names(x))} and change back to uppercase when I export
+the data (if required).
+\end{tip}
+
+\section{Defensive programming with code assertions}
+
+The section is not about \pack, but a style of programming that I believe helps
+to reduce errors and makes code more robust and easier to follow.  I call it ``defensive
+programming''.  The idea is to use code {\it assertions}, which are essentially
+checks about the data that are expressed in code.  In \rlan, assertions can be
+made using the function \code{stopifnot(...)}.  For example, if I believe that
+there should not be any missing \code{subjid} values in the \code{PC} data then
+I could express that as:
+<<>>=
+stopifnot(nmissing(pkstudy.PC$subjid) == 0)
+@
+When this code is executed, if the condition evaluates to \code{TRUE} then
+nothing happens.  But, if the condition is \code{FALSE}, then an error is
+generated.  For example:
+<<eval=FALSE>>=
+stopifnot(pkstudy.PC$pctest == "DRUG-X")
+@
+<<echo=FALSE>>=
+expr <- quote(stopifnot(pkstudy.PC$pctest == "DRUG-X"))
+err <- try(eval(expr), silent=TRUE)
+cat(err)
+@
+Here, the assertion states that the only value of \code{pctest} is
+\code{"DRUG-X"}, but the assertion failed which means that there must be some
+other values in this column as well.
+
+Used in this way, assertions make for self-documenting code.  The big advantage
+of assertions over code comments is that assertions are evaluated every time the
+code is run.  So, the person reviewing the code not only knows that these
+relevant facts were verified, but also has the result right there in the script
+and is able to simply re-execute it with no effort.  It also makes the code more
+robust---if the data were to change, the script can be re-run with the
+confidence that at least any changes that affect the results of the assertions
+will be caught immediately.
+
+There is a function in \pack that will generate some basic assertions about
+each column of a \code{data.frame}.  It can be used like this:
+<<eval=FALSE>>=
+sink("data_checks.R")
+generate.assertions(pkstudy.DM)
+generate.assertions(pkstudy.PC)
+generate.assertions(pkstudy.EX)
+generate.assertions(pkstudy.VS)
+generate.assertions(pkstudy.LB)
+generate.assertions(pkstudy.CM)
+sink()
+@
+The file \code{data\_checks.R} now contains some assertions about each column in
+each \code{data.frame}, such as the \code{class}, the number of missing values,
+the range (for numeric column), and the levels (for factors).  This is similar
+information to what one would obtain from a \code{summary()} or
+\code{describe()} of the data, but again the advantage is that the assertions
+will actually be executed to be sure the statements are (and remain) accurate.
+The assertions can be sourced at the top of the script:
+<<eval=FALSE>>=
+source("data_checks.R")
+@
+
+\section{Assembling the NONMEM data set}
+
+\subsection{The populations}
+
+In a PK study data I suggest that there are at least three different
+populations that might be of interest:
+\begin{itemize}
+\item The study population, which consists of every subject that was ever assigned
+an ID in the study.  This is the largest population, and by definition each
+record in each of the study database is associated with a member of this
+population.
+\item The PK population.  This is a subset of the study population which
+consists of all subjects for which PK concentration data was generated.
+\item The analysis population.  This is a subset of the PK population which
+consists of those subjects for which sufficient PK data is available for
+analysis.
+\end{itemize}
+In simple cases these three population might be equal but in general they are
+not.  For example, in a large study PK concentration data might have been
+planned for only a subset of the overall study population.  As another example,
+if some subject received a placebo rather than a study drug then they would
+probably be excluded from the analysis population.  There may also be different
+populations with respect to different PD endpoints.  In this example, the
+\code{DM} data contains an entry for each subject in the study population.
+Consider these assertions:
+<<>>=
+stopifnot(blk.count(asID(pkstudy.DM$subjid)) == 1)
+stopifnot(pkstudy.PC$subjid %in% pkstudy.DM$subjid)
+stopifnot(pkstudy.EX$subjid %in% pkstudy.DM$subjid)
+stopifnot(pkstudy.VS$subjid %in% pkstudy.DM$subjid)
+stopifnot(pkstudy.LB$subjid %in% pkstudy.DM$subjid)
+stopifnot(pkstudy.CM$subjid %in% pkstudy.DM$subjid)
+@
+The first uses the function \code{blk.count} to assert that each subject appears
+in the \code{DM} data only once (a similar assertion could be expressed with
+\code{duplicated(...)}).  The other assertions state that \code{DM} contains all
+the subjects in the database.  Now I create a \code{data.frame} for the study
+population:
+<<>>=
+pop <- data.frame(id = asID(pkstudy.DM$subjid))
+@
+Note the use of the \pack function \code{asID}, which simply creates a
+\code{factor} out of its argument(s).
+
+\begin{tip}
+\pack encourages and even requires working with \code{factor}s for ID variables.
+\code{factor}s are an integral part of \rlan and need to be understood to be
+used effectively.  A \code{factor} is used to represent categorical data.  An ID
+is a type of categorical data.  Even if it consists of all numeric digits, it
+should be thought of as an identifier and not a number (consider that it makes
+no sense to add two ID's for example).  The important thing to know about
+\code{factor}s is that they have a \code{levels} attribute that determines what
+values are permissible, and also how the values are ordered.  It is also
+permissible for a \code{factor} to have more \code{levels} than values, as in
+<<>>=
+factor(c("Female", "Female", "Female"), levels=c("Female", "Male"))
+@
+In this case, \code{"Male"} is a permissible value for this factor; it just so
+happens that there aren't any in this particular vector.  When there are
+multiple \code{data.frame}s that are linked by ID variables, it makes sense for
+all these ID variables have the sames \code{levels} attribute---the superset of
+all the IDs.  But this is usually not the case when the data are read into \rlan
+since each \code{data.frame} contains a different subset of IDs.
+One can always change the \code{levels} attribute if needed.
+\end{tip}
+
+\subsection{The pharmacokinetic concentration data}
+
+Here are the first few row of the \code{PC} data:
+<<>>=
+head(pkstudy.PC)
+@
+Assertions would tell us, for instance, that there are 12 subjects:
+<<>>=
+stopifnot(class(pkstudy.PC$subjid) == "factor") 
+stopifnot(nmissing(pkstudy.PC$subjid) == 0) 
+stopifnot(nlevels(pkstudy.PC$subjid) == 12) 
+@
+one study:
+<<>>=
+stopifnot(class(pkstudy.PC$studyid) == "factor") 
+stopifnot(nmissing(pkstudy.PC$studyid) == 0) 
+stopifnot(nlevels(pkstudy.PC$studyid) == 1) 
+stopifnot(levels(pkstudy.PC$studyid) == c("XXX-YYY-ZZZ")) 
+@
+two periods:
+<<>>=
+stopifnot(class(pkstudy.PC$visit) == "factor") 
+stopifnot(nmissing(pkstudy.PC$visit) == 0) 
+stopifnot(nlevels(pkstudy.PC$visit) == 2) 
+stopifnot(levels(pkstudy.PC$visit) == c("PERIOD I", "PERIOD II")) 
+@
+and two analytes:
+<<>>=
+stopifnot(class(pkstudy.PC$pctest) == "factor") 
+stopifnot(nmissing(pkstudy.PC$pctest) == 0) 
+stopifnot(nlevels(pkstudy.PC$pctest) == 2) 
+stopifnot(levels(pkstudy.PC$pctest) == c("DRUG-X", "METABOLITE-Y")) 
+@
+I can also be sure that all concentrations are given in the same unit (ng/mL),
+and so on.
+
+Suppose that I am only interested in \code{"DRUG-X"}.  I need to filter the
+\code{PC} data, rename and re-order the columns, transform the data and so on.
+I find that the cleanest way to start is by creating a new \code{data.frame}
+like this:
+<<>>=
+pk <- with(subset(pkstudy.PC, pctest=="DRUG-X"), data.frame(
+    id     = factor(subjid, levels=levels(pop$id)),
+    study  = studyid,
+    visit  = visit,
+    tpt    = pctpt,
+    period = NA,
+    cdate  = gsub("(.*)T.*", "\\1", pcdtc),
+    ctime  = gsub(".*T(.*)", "\\1", pcdtc),
+    dttm   = strptime(pcdtc, "%Y-%m-%dT%H:%M", tz="UTC"),
+    rtime  = NA,
+    tad    = NA,
+    ntad   = NA,
+    evid   = 0,
+    dvraw  = mixedData(pcorres),
+    dv     = NA,
+    lndv   = NA,
+    mdv    = NA,
+    mdvbql = NA,
+    amt    = NA,
+    ss     = NA,
+    ii     = NA
+))
+@
+Note that some of the field were left empty on purpose since they will be filled
+in later, but I find it clearer to create place-holders for them right from the
+start.  I will pretend that the fields \code{pcstresc}, \code{pcstresn} do not
+exist, and that the concentration is only contained in \code{pcorres}, which is
+a \code{factor} because it contains both non-numeric and numeric data.  \pack
+defines a simple class called \code{mixedData} which is designed to handle such
+data.  Now I can view the non-numeric values easily, and convert the remainder
+to a \code{numeric} vector:
+<<>>=
+unique(pk$dvraw)
+pk$dv <- as.numeric(pk$dvraw)
+@
+Unlike \code{as.numeric(as.character(...))}, the last line does not issue a
+warning (correct code should run clean).
+Now I am sure that the only non-numeric value in \code{pcorres} is
+\code{"\Sexpr{unique(pk$dvraw)[unique(pk$dvraw) != "<Number>"]}"}.  I could
+express this as an assertion:
+<<>>=
+stopifnot(unique(pk$dvraw) %in% c("<Number>", "BQL<(1.00)"))
+@
+
+I continue filling in the remaining fields:
+<<>>=
+pk$lndv   <- log(pk$dv)
+pk$mdvbql <- 1*(pk$dvraw == "BQL<(1.00)")
+pk$mdv    <- 1*is.na(pk$dv)
+@
+For the date-time (\code{dttm}) field I have specified the \code{UTC} time
+zone.  With this time zone, daylight savings time is not considered in
+time difference calculations.  I can check that there are no missing times, and
+that the concentration data are time-ordered:
+<<>>=
+stopifnot(nmissing(pk$dttm) == 0)
+stopifnot(is.sorted(pk$id, pk$dttm))
+@
+The nominal time after dose can be obtained from the textual nominal time-point.  To do
+this, it is convenient to use a \code{mapping}:
+<<>>=
+ntad.mapping <- mapping(c("PRE-DOSE" = 0,
+                          "0.5 HOURS POST-DOSE" = 0.5,
+                          "1.0 HOURS POST-DOSE" = 1.0,
+                          "2 HOURS POST-DOSE" = 2,
+                          "4 HOURS POST-DOSE" = 4,
+                          "6 HOURS POST-DOSE" = 6,
+                          "8 HOURS POST-DOSE" = 8,
+                          "12 HOURS POST-DOSE" = 12))
+
+pk$ntad <- ntad.mapping(pk$tpt)
+@
+\code{mapping} is a function in \pack that creates a {\em new} function
+that translates (or maps) one set of values to another.
+
+Similarly, for the \code{period}, I want to map the \code{visit} to a numeric value:
+<<>>=
+period.mapping <- mapping(c("PERIOD I", "PERIOD II"), 1:2)
+pk$period <- period.mapping(pk$visit)
+@
+
+Here are the first rows of the \code{pk} data:
+<<>>=
+head(pk)
+@
+
+\subsection{The exposure data}
+
+The exposure data is handled similarly to the concentration data.
+<<>>=
+dose <- with(pkstudy.EX, data.frame(
+    id     = factor(subjid, levels=levels(pop$id)),
+    study  = studyid,
+    visit  = visit,
+    tpt    = NA,
+    period = NA,
+    cdate  = gsub("(.*)T.*", "\\1", exstdtc),
+    ctime  = gsub(".*T(.*)", "\\1", exstdtc),
+    dttm   = strptime(exstdtc, "%Y-%m-%dT%H:%M", tz="UTC"),
+    rtime  = NA,
+    tad    = 0,
+    ntad   = 0,
+    evid   = 1,
+    dvraw  = NA,
+    dv     = NA,
+    lndv   = NA,
+    mdv    = 1,
+    mdvbql = 0,
+    amt    = exdose,
+    ss     = NA,
+    ii     = NA
+))
+@
+I use a different \code{mapping} for period because it is written differently:
+<<>>=
+period.mapping2 <- mapping(c("Treatment Period I", "Treatment Period II"), 1:2)
+dose$period <- period.mapping2(dose$visit)
+@
+Suppose that in this study, the first dose of period II is given at steady state
+with BID dosing (so these events should have \code{ss=1} and \code{ii=12}),
+while the other dose events should have \code{ss=0} and \code{ii=0}.  There are
+different ways to accomplish this using standard functions.  One way that is
+typically used is to filter the rows for period 2, then identify the first of
+these for each subject, then merge these back with the other dose events.  Here
+I will use a function from \pack called \code{blk.firstOnly} to do this
+``in-place'', in a logical manner.  First I want to be sure that the data are
+time-ordered:
+<<>>=
+stopifnot(nmissing(dose$dttm) == 0)
+stopifnot(is.sorted(dose$id, dose$dttm))
+@
+Now, I can identify the first dose of period II as follows:
+<<>>=
+dose$ss <- with(dose, 1*blk.firstOnly(id=id, ind=(period==2)))
+dose$ii <- ifelse(dose$ss == 1, 12, 0)
+@
+
+Here are the first rows of the \code{dose} data:
+<<>>=
+head(dose)
+@
+
+\subsection{Combining the concentration and exposure data and computing relative
+time}
+
+I combine the concentration and exposure data:
+<<>>=
+base.df <- rbind(pk, dose)
+base.df <- base.df[order(base.df$id, base.df$dttm, base.df$evid),]
+@
+
+Now, relative time and time-after-dose are easily calculated using functions
+from \pack:
+<<>>=
+base.df$rtime <- with(base.df, blk.relativeTime(dttm, id, bl.ind=(evid==1)))
+base.df$tad   <- with(base.df, blk.tad(rtime, id, dose.ind=(evid==1), na.action="neg.time"))
+@
+The last option \code{na.action="neg.time"} simply says that for event that
+occur before the first dose, the field \code{tad} should contain a negative
+value with magnitude equal to the time until the first dose.
+
+I will keep the important baseline time (time of the first dose) in the
+\code{pop} \code{data.frame}.  I will also count the number of PK samples
+contained in the data set for each subject, and determine the analysis
+population:
+<<>>=
+pop$bldttm       <- with(base.df, blk.singleValue(dttm, id, ind=(rtime==0)))
+pop$pktotal      <- with(base.df, blk.count(id, NULL, ind=(evid==0)))
+pop$pkanalysis   <- with(base.df, blk.count(id, NULL, ind=(mdv==0)))
+pop$pkmdv        <- with(base.df, blk.count(id, NULL, ind=(evid==0 & mdv==1)))
+pop$analysisflag <- pop$pkanalysis > 0
+pop
+@
+Of the \Sexpr{nrow(pop)} subjects in the study population,
+\Sexpr{sum(pop$analysisflag)} are included in the analysis population.  I will
+keep only the subjects in the analysis population:
+<<>>=
+base.df <- subset(base.df, id %in% pop$id[pop$analysisflag])
+@
+
+\subsection{Merging covariates}
+
+Now I have a base data set for PK analysis.  Starting with the base data, I
+will successively add covariates.  Covariates can be classified as time-fixed or
+time-varying, and there are different functions in \pack that can help with
+each. I begin with a copy of \code{base.df}:
+<<>>=
+cov.df <- base.df
+@
+
+First, the demographic covariates are merged.  Here are the first few rows of
+\code{DM}:
+<<>>=
+head(pkstudy.DM)
+@
+
+Create the \code{demo} \code{data.frame}:
+<<>>=
+demo <- with(pkstudy.DM, data.frame(
+    id      = factor(subjid, levels=levels(pop$id)),
+    age     = age,
+    sexn    = NA,
+    sexc    = mapping(c("F", "M"), c("Female", "Male"))(sex),
+    racen   = NA,
+    racec   = race
+))
+@
+Map the sex and race labels to numeric values:
+<<>>=
+sex.mapping <- mapping(c("Female"=0, "Male"=1))
+demo$sexn <- sex.mapping(demo$sexc)
+
+race.mapping <- mapping(c("WHITE"=1,
+                          "BLACK OR AFRICAN AMERICAN"=2,
+                          "AMERICAN INDIAN OR ALASKA NATIVE"=3))
+demo$racen <- race.mapping(demo$racec)
+@
+
+To merge these time-fixed covariates with the PK data, I will use the function
+\code{blk.repeatValue} from
+\pack as follows:
+<<>>=
+for (var in c("age", "sexn", "sexc", "racen", "racec")) {
+    cov.df[[var]] <- blk.repeatValue(demo[[var]], demo$id, cov.df$id)
+}
+@
+Rather than repeating the same for each covariate, I have used a loop to make it
+clear that logic is the same for each.  It also makes the code more concise.
+
+Next, I will merge body weight and height from the \code{VS} data.  Height will
+be time-fixed (baseline value).  For weight, I will include both the time-fixed
+baseline value, and the value from the most recent visit, which will be
+time-varying.  Here are the first few lines of the \code{VS} data:
+<<>>=
+head(pkstudy.VS)
+@
+
+This line will report all the test names and corresponding units:
+<<>>=
+data.frame(units=tapply(as.character(pkstudy.VS$vsstresu), pkstudy.VS$vstest, unique))
+@
+
+I begin processing the \code{VS} data by creating a new \code{data.frame}:
+<<>>=
+vitals <- with(pkstudy.VS, data.frame(
+    id      = factor(subjid, levels=levels(pop$id)),
+    dttm    = strptime(vsdtc, "%Y-%m-%dT%H:%M", tz="UTC"),
+    day     = NA,
+    test    = vstest,
+    result  = vsstresn,
+    unit    = vsstresu
+))
+@
+
+Suppose that the baseline measurement is the measurement taken on the same day
+that the first dose is administered.  I can flag that measurement with:
+<<>>=
+vitals$blflag <- with(vitals,
+                 blk.relativeTime(dttm, id, baseline=pop$bldttm,
+                 diff.op=difftime.days) == 0)
+@
+Note the use of the function \code{difftime.days} that compares date-times at the day
+level.
+
+Now, I can merge with the PK data \code{cov.df} as follows:
+<<>>=
+cov.df$ht <- with(subset(vitals, test=="HEIGHT" & blflag),
+             blk.repeatValue(vitals$result, vitals$id, cov.df$id))
+
+cov.df$wtbase <- with(subset(vitals, test=="WEIGHT" & blflag),
+                 blk.repeatValue(vitals$result, vitals$id, cov.df$id))
+
+cov.df$wt <- with(subset(vitals, test=="WEIGHT"),
+             blk.nearestMatch(cov.df$dttm, cov.df$id, result, dttm, id,
+             direction="both", diff.op=difftime.days, tol=c(Inf, 0)))
+@
+The last line will match each event time in \code{cov.df} with the \code{result}
+from \code{vitals} that is closest in time out of those that occur before the
+event as well as those that occur later on the same day
+(this makes sense for a covariate like body weight that does not change
+throughout the day).
+
+The lab data is similar to the vitals data.  Here are the first few lines of
+\code{LB}:
+<<>>=
+head(pkstudy.LB)
+@
+
+It is important to verify the units of all lab tests.
+This line will report all the test names and corresponding units:
+<<>>=
+data.frame(units=tapply(as.character(pkstudy.LB$lbstresu), pkstudy.LB$lbtest, unique))
+@
+
+I am not interested in all the labs.  I want to keep only:
+<<>>=
+lab.keep <- c(
+    "Albumin",
+    "Alkaline Phosphatase",
+    "ALT (SGPT)",
+    "AST (SGOT)",
+    "Creatinine",
+    "Total Bilirubin") 
+@
+Each of these labs will correspond to a column in my data set.  I want the
+columns to be named according to this mapping:
+<<>>=
+lab.mapping <- mapping(lab.keep,
+                       c("alb", "alp", "alt", "ast", "scr", "bili"))
+@
+
+I create a \code{data.frame} for the labs I will keep:
+<<>>=
+labs <- with(subset(pkstudy.LB, lbtest %in% lab.keep), data.frame(
+    id      = factor(subjid, levels=levels(pop$id)),
+    dttm    = strptime(lbdtc, "%Y-%m-%dT%H:%M", tz="UTC"),
+    test    = lab.mapping(lbtest),
+    result  = lbstresn,
+    unit    = lbstresu
+))
+labs <- labs[order(labs$id, labs$dttm, labs$test),]
+@
+
+Double check that I have the units I want:
+<<>>=
+stopifnot(labs$unit[labs$test=="alb"]  == "g/L")
+stopifnot(labs$unit[labs$test=="alp"]  == "U/L")
+stopifnot(labs$unit[labs$test=="alt"]  == "U/L")
+stopifnot(labs$unit[labs$test=="ast"]  == "U/L")
+stopifnot(labs$unit[labs$test=="scr"]  == "umol/L")
+stopifnot(labs$unit[labs$test=="bili"] == "umol/L")
+@
+
+Frequently there will be samples with replicate measurements and it is something
+that one should be aware of and check for.
+I will check for samples with replicate measurements using the function
+\code{blk.count}:
+<<>>=
+labs$count <- with(labs, blk.count(asID(id, dttm, test)))
+subset(labs, count > 1)
+@
+In this case, I find \Sexpr{sum(1 / (subset(labs, count > 1, select=count)))}
+samples with replicate measurements. Thus, for each sample I will take the
+mean of the replicates.  To achieve this I will use the function
+\code{blk.applyNtoN} from \pack:
+<<>>=
+labs$meanres <- with(labs, blk.applyNtoN(result, asID(id, dttm, test), mean))
+@
+So now:
+<<>>=
+subset(labs, count > 1)
+@
+
+For each lab test, I will add one column for the time-fixed baseline measurement, and
+one for the time-varying latest measurement (``last observation carried
+forward'' or LOCF approach).
+<<>>=
+for (var in lab.mapping(lab.keep)) {
+    cov.df[[var]] <- with(subset(labs, test==var),
+        blk.locf2(cov.df$dttm, cov.df$id, meanres, dttm, id))
+    cov.df[[paste(var, "base", sep="")]] <-
+        with(cov.df, blk.repeatValue(cov.df[[var]], id, ind=(rtime==0)))
+}
+@
+Here I have taken the baseline measurement to be the last measurement prior to
+the first dose.
+
+The data set should include creatinine clearance, estimated using the
+Cockroft-Gault formula, as a covariate.
+I compute it with the function \code{crcl.cg} in \pack:
+<<>>=
+cov.df$crcl <- with(cov.df,
+    crcl.cg(scr.umol.L=scr, weight.kg=wt, age.yr=age, is.female=(sexc=="Female")))
+
+cov.df$crclbase <- with(cov.df,
+    crcl.cg(scr.umol.L=scrbase, weight.kg=wtbase, age.yr=age, is.female=(sexc=="Female")))
+@
+
+The last two covariate I want to add is are indicators of concomitant use of CYP3A
+inhibitors and inducers.  I will suppose that I have been given the following
+lists of all the relevant drugs:
+<<>>=
+cyp3a4.inhibitors <- c(
+    "amprenavir",
+    "atazanavir",
+    "fosamprenavir",
+    "indinavir",
+    "lopinavir",
+    "nelfinavir",
+    "ritonavir",
+    "saquinavir",
+    "clarithromycin",
+    "erythromycin",
+    "telithromycin",
+    "troleandomycin",
+    "fluconazole",
+    "itraconazole",
+    "ketoconazole",
+    "voriconazole",
+    "nefazodone",
+    "mibefradil",
+    "diltiazem",
+    "verapamil",
+    "aprepitant"
+)
+
+cyp3a4.inducers <- c(
+    "efavirenz",
+    "nevirapine",
+    "rifampin",
+    "carbamazepine",
+    "phenobarbital",
+    "phenytoin"
+)
+@
+
+Here are the first few lines of the \code{CM} data:
+<<>>=
+head(pkstudy.CM)
+@
+
+I will assume that if the end date is missing then the concomitant drug is
+ongoing.  I will also assume that if a drug is stopped, it's effect carries on
+for 2 days afterwards.  Time comparisons will be done in days, since only dates
+(and not times) of concomitant drugs are provided.  I create the following
+\code{data.frame}:
+<<>>=
+conmed <- with(pkstudy.CM, data.frame(
+    id      = factor(subjid, levels=levels(pop$id)),
+    name    = cmtext,
+    start   = as.Date(cmstdtc, "%Y-%m-%d"),
+    end     = as.Date(cmendtc, "%Y-%m-%d") + as.difftime(2, units="days")
+))
+@
+
+I will do case-insensitive matching of the drugs in the inhibitor and inducer
+lists against the \code{name} of the drug:
+<<>>=
+conmed$inh3a <- grepl(paste(cyp3a4.inhibitors, collapse="|"),
+    conmed$name, ignore.case=TRUE, perl=TRUE)
+conmed$ind3a <- grepl(paste(cyp3a4.inducers, collapse="|"),
+    conmed$name, ignore.case=TRUE, perl=TRUE)
+subset(conmed, inh3a)
+subset(conmed, ind3a)
+@
+
+Now, I match the PK sample times to the intervals during which the concomitant
+drugs were taken using the function \code{blk.concomitant} in \pack:
+<<>>=
+cov.df$inh3a <- with(subset(conmed, inh3a),
+    1*(blk.concomitant(as.Date(cov.df$dttm), cov.df$id, start, end, id) > 0))
+cov.df$ind3a <- with(subset(conmed, ind3a),
+    1*(blk.concomitant(as.Date(cov.df$dttm), cov.df$id, start, end, id) > 0))
+@
+
+
+\subsection{Creating and exporting the final data}
+
+I now have an almost completed data set.  There are just a few more changes
+that need to be made to finalize the data set.
+<<>>=
+final.df <- cov.df
+@
+Negative times are not allowed in NONMEM, so they are set to zero:
+<<>>=
+final.df$rtime[final.df$rtime < 0] <- 0
+@
+
+For time in hours, 4 decimal places provide accuracy to the nearest
+second, so more are not needed:
+<<>>=
+final.df$rtime <- round(final.df$rtime, 4)
+final.df$tad   <- round(final.df$tad,   4)
+@
+
+So far, I have been using the study-specific ID.  NONMEM requires individuals
+to be numbered sequentially.  I will keep the study-specific ID in
+\code{subjid}, create a unique subject ID \code{usubjid} using the study ID and
+subject ID, and use the function \code{blk.sequentialID} to create the
+numeric ID:
+<<>>=
+final.df$subjid <- final.df$id
+final.df$usubjid <- sprintf("%s-%s", final.df$study, final.df$subjid)
+final.df$id <- blk.sequentialID(final.df$id)
+@
+
+Here are a few simple consistency checks:
+<<>>=
+stopifnot(with(final.df, is.sorted(id, rtime)))
+stopifnot(with(final.df, !is.na(evid) & evid %in% c(0, 1)))
+stopifnot(with(final.df, !is.na(mdv) & mdv %in% c(0, 1)))
+stopifnot(with(subset(final.df, evid==0), is.na(amt) & (dv > 0 | mdv == 1)))
+stopifnot(with(subset(final.df, evid==1), is.na(dv) & mdv == 1 & amt > 0))
+@
+
+Lastly, I specify the order I want the columns to appear in the final data, out
+output the data in a NONMEM friendly CSV format.  The utility function
+\code{write.nonmem.csv} will take care of converting the column names to
+uppercase, writing a `hash' (#) before the line containing the column names (so
+that it will be ignored by NONMEM), and rounding the numeric columns.
+<<>>=
+final.colnames <- 
+c("id", "study", "subjid", "usubjid", "visit", "tpt", "period", "cdate",
+"ctime", "dttm", "rtime", "tad", "ntad", "evid", "dvraw", "dv", "lndv", "mdv",
+"mdvbql", "amt", "ss", "ii", "age", "sexn", "sexc", "racen", "racec", "ht",
+"wtbase", "wt", "alb", "albbase", "alp", "alpbase", "alt", "altbase", "ast",
+"astbase", "scr", "scrbase", "bili", "bilibase", "inh3a", "ind3a")
+
+write.nonmem.csv(final.df[,final.colnames], "NMDATA.csv", digits=5)
+@
+
+
+\section{Conclusion}
+
+In this vignette I have used a NONMEM data set construction example to
+demonstrate some of the functions in \pack.  This example is a simplification of
+the data that one would encounter in a real study, but contains sufficient
+complexity to illustrate how the functions in \pack can be used in practice.
+
+
+\end{document}
+
+% vim: tw=80 spell

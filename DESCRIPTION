@@ -1,0 +1,19 @@
+Package: PCSmisc
+Type: Package
+Title: Useful functions for longitudinal data set construction and manipulation.
+Version: 0.9.3
+Date: 2012-31-07
+Author: Ben Rich <benjamin.rich@certara.com>
+Maintainer: Ben Rich <benjamin.rich@certara.com>
+Suggests: nlme
+Description: This package contains functions that are useful for manipulating
+    longitudinal data and for constructing data sets that can be
+    used for population pharmacokinetic analysis with the program NONMEM.
+    It is common for longitudinal data sets to be structured
+    in blocks, with one or more 'ID' columns specifying block boundaries (i.e.
+    resembling the format prescribed by NONMEM).  Manipulating data formatted
+    this way can become cumbersome, and this package attempts to alleviate some of the
+    burden by providing a set of standard functions, the 'blk.*' functions, to
+    accomplish recurring operations.
+License: GPL-2
+LazyLoad: yes

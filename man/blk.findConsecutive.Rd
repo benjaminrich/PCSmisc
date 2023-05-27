@@ -28,7 +28,7 @@ blk.findConsecutive(id, ind, min.consec = 2)
   An integer vector in \code{\link{block-format}} with respect to \code{id}
   containing a unique group ID for rows belonging to identified groups, and 0 otherwise.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
   \code{\link{block-format}}

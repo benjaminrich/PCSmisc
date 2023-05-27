@@ -64,7 +64,7 @@ blk.repeatValue(x, id, id2=id, ind = NULL, select = c("first", "last"), fill = N
   \code{blk.repeatValue} returns a vector in
   \code{\link{block-format}} with respect to \code{id2}.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
   \itemize{

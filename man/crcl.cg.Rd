@@ -26,7 +26,7 @@ crcl.cg(..., scr.mg.dL, weight.kg, age.yr, is.female, scr.umol.L, scr.conversion
 \value{
   A numeric vector containing the estimated creatinine clearance in mL/min.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
   \code{\link{egfr.mdrd}}

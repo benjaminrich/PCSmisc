@@ -24,7 +24,7 @@ blk.sequentialID(id)
 \value{
   A valid \code{\link{block-format}} ID.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
   \code{\link{block-format}}

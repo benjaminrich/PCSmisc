@@ -18,7 +18,7 @@ difftime.days(time1, time2)
 \value{
   An integer vector containing the number of days between time1 and time2.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
   \code{\link{difftime.default}}

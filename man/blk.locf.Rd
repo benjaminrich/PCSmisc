@@ -52,7 +52,7 @@ blk.nocb(x, id, na.action = c("fill", "carry.forward"), fill = NA)
 \value{
   A vector in \code{\link{block-format}} with respect to \code{id}.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
   \itemize{

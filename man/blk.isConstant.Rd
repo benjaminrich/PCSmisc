@@ -23,7 +23,7 @@ blk.isVarying(x, id, ind = NULL)
 \value{
     A logical.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
     \itemize{

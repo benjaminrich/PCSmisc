@@ -50,7 +50,7 @@ mixedData(x)
   \code{unique} and \code{print} return \code{character},
   \code{as.double} returns \code{numeric}.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \examples{
 # Generate a vector with approx. 5% left-censoring:

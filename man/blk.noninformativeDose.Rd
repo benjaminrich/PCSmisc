@@ -34,7 +34,7 @@ blk.noninformativeDose(id, dose.ind, ss.ind = NULL)
     A logical vector in \code{\link{block-format}} with respect to \code{id} indicating dose events
     that are non-informative.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
     \itemize{

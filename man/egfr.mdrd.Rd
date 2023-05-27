@@ -30,7 +30,7 @@ egfr.mdrd(..., scr.mg.dL, age.yr, is.female, is.black, bun.mg.dL=NULL, albumin.g
 \references{
     \url{http://en.wikipedia.org/wiki/Creatinine_clearance}
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
   \code{\link{crcl.cg}}

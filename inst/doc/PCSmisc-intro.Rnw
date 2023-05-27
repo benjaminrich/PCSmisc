@@ -47,7 +47,7 @@
 
 \title{Introduction to \pack \\
 Constructing a NONMEM Data Set in \rlan}
-\author{Benjamin Rich\\(\code{benjamin.rich@certara.com})}
+\author{Benjamin Rich\\(\code{mail@benjaminrich.net})}
 
 <<echo=FALSE, results=hide>>=
 ps.options(pointsize=12)

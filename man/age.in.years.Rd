@@ -17,7 +17,7 @@ age.in.years(on.this.date, birth.date)
 \value{
   An integer vector containing the age in years.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
   \code{\link{difftime}}

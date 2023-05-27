@@ -42,7 +42,7 @@ Value:      0      1       2         1        0
     An integer vector in \code{\link{block-format}} with respect to \code{id}.
     The value indicates how many of the time intervals overlap with the corresponding \code{time}.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
   \itemize{

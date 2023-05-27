@@ -49,7 +49,7 @@ blk.isSteadyState(time, id, dose.ind, dose.interval, tol, min.time.ss, dose = NU
     indicating dose events occurring at steady state according to the criteria
     specified.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
     \itemize{

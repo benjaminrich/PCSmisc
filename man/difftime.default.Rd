@@ -22,7 +22,7 @@ difftime.hours(time1, time2)
 \value{
     A numeric vector containing the time difference.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
     \code{\link{difftime}}

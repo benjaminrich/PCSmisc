@@ -21,7 +21,7 @@ is.sorted(...)
 \value{
 A logical.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
   \code{\link{is.unsorted}}

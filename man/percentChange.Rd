@@ -13,7 +13,7 @@ percentChange(x, y)
 \value{
     \code{100*(x - y) / y}
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \keyword{ utilities }
 

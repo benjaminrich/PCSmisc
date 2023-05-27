@@ -29,7 +29,7 @@ mapping(from, to, ch.as.fact = TRUE)
   function also has a attribute \code{"inverse"} which is a function
   that performs the inverse mapping.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \examples{
 

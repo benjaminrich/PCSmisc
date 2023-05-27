@@ -37,7 +37,7 @@ blk.AUC.by.trapezoid(x, y, id, id2 = id, ind = NULL, fill = NA, diff.op = "-", .
   each level of \code{id}.  Otherwise,
   a vectors in \code{\link{block-format}} with respect to \code{id2}.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
   \code{\link{block-format}}

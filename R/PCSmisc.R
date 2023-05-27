@@ -873,6 +873,50 @@ blk.isSteadyState <- function(time, id, dose.ind, dose.interval, tol, min.time.s
     #ss
 }
 
+blk.ii <- function(time, id, dose.ind, diff.op=difftime.default) {
+
+    ii <- blk.intereventTime(time, id=id, ind=dose.ind, diff.op=diff.op)
+    ii <- blk.shift(ii, id=id, shift.by= -1, ind=dose.ind, fill=0)
+    ii[!dose.ind] <- NA
+    ii
+}
+
+blk.addl <- function(ii, id, dose.ind, dose, tol.ii=1e-5, tol.dose=1e-5, min.consec=2, include.last=FALSE, diff.op=difftime.default) {
+
+    PCSmisc:::.checkID(id)
+
+    if (!is.numeric(dose)) {
+        stop("'dose' must be numeric times.")
+    }
+    if (!(length(ii)==length(id) && length(dose.ind)==length(id) && length(dose)==length(id))) {
+        stop("'ii', 'id', 'dose.ind' and 'dose' must all have the same length.")
+    }
+
+    y <- blk.diff(ii, id=id, ind=dose.ind)
+    y <- blk.shift(y, id=id, shift.by= -1, ind=dose.ind, fill=0)
+
+    z <- blk.diff(dose, id=id, ind=dose.ind)
+    z <- blk.shift(z, id=id, shift.by= -1, ind=dose.ind, fill=0)
+
+    flag <- dose.ind & (abs(y) < tol.ii) & (abs(z) < tol.dose)
+
+    # Do this twice, because the last ii can be anything
+    for (i in 1:2) {
+        flag2 <- blk.shift(flag, id=id, fill=FALSE)
+        flag[dose.ind & !flag & flag2] <- flag2[dose.ind & !flag & flag2]
+    }
+
+    if (!include.last) {
+        flag <- flag & blk.shift(dose.ind, id=id, shift.by= -1, fill=FALSE)
+    }
+
+    cons <- blk.findConsecutive(id, ind=(dose.ind & flag), min.consec=min.consec)
+
+    addl <- ifelse(dose.ind, 0, NA)
+    addl[cons>0] <- ifelse(blk.firstOnly(asID(cons[cons>0])), blk.count(id=asID(cons[cons>0])) - 1, -1)
+    addl
+}
+
 # Description: Flags doses preceding a steady state event when no non-dose event has occurred between the two.
 blk.noninformativeDose <- function(id, dose.ind, ss.ind=NULL) {
     .checkID(id)

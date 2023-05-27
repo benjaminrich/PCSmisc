@@ -58,7 +58,7 @@ blk.lastOnwards(id, ind, include.last = TRUE, fill = FALSE)
 \value{
     An indicator vector (logical) \code{\link{block-format}} with respect to \code{id} that indicates the elements selected.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
   \code{\link{block-format}}

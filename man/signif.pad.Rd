@@ -16,7 +16,7 @@ signif.pad(x, digits = 3, round.integers = FALSE)
 \value{
   A character vector containing the rounded numbers.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
   \code{\link{signif}}

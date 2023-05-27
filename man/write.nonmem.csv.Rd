@@ -61,7 +61,7 @@ TABLE NO.  1
   \code{read.nonmem.csv} and \code{read.nonmem.table} both return a
   \code{\link{data.frame}}.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
   \itemize{

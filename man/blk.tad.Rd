@@ -44,7 +44,7 @@ blk.tad2(time, id, dose.t, id2, na.action = c("neg.time", "fill"), fill = NA, di
 \value{
   A numeric vector of TAD values in \code{\link{block-format}} with respect to \code{id}.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
   \code{\link{tapply}}

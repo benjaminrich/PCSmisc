@@ -30,7 +30,7 @@ generate.assertions(dat, max.level.show = 12, digits.compare = 6)
 \value{
   None (\code{\link{invisible}} `\code{NULL}').
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
   \code{\link{stopifnot}}

@@ -36,7 +36,7 @@ the creation of population PK type datasets, as required e.g. for analysis with
 NONMEM.  See examples below.
 }
 
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
   \code{\link{asID}}

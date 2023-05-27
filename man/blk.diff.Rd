@@ -38,7 +38,7 @@ blk.intereventTime(time, id, ind = NULL, lag = 1, fill = NA, diff.op = difftime.
   A vector in \code{\link{block-format}} with respect to \code{id}
   containing the differenced values.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
   \itemize{

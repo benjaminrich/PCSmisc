@@ -13,7 +13,7 @@ nmissing(x)
 \value{
   An integer equal to \code{sum(is.na(x))}.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \keyword{ utilities }
 

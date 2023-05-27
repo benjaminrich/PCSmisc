@@ -13,7 +13,7 @@ nunique(x)
 \value{
   An integer equal to \code{length(unique(x))}.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \keyword{ utilities }
 

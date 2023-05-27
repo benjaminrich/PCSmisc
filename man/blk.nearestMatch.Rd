@@ -52,7 +52,7 @@ blk.nearestMatch(time, id, observ.x, observ.t, id2 = id, direction = c("forward"
   containig the nearest match imputed values at times \code{time} from
   \code{observ.x}.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
   \itemize{

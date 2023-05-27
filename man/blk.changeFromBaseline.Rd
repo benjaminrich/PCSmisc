@@ -40,7 +40,7 @@ blk.relativeTime(time, id, baseline = blk.singleValue(time, id, ind=bl.ind, sele
   A vector in \code{\link{block-format}} with respect to \code{id} containing
   the change from baseline (or relative time) for \code{x} (or \code{time}).
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
   \itemize{

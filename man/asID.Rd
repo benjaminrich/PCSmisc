@@ -17,7 +17,7 @@ asID(id, ..., sep="|")
 \value{
   A valid block format ID, i.e. a factor \code{x} such that \code{\link{is.unsorted}(x)} is \code{FALSE}.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
   \code{\link{block-format}}

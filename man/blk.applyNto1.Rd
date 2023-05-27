@@ -59,7 +59,7 @@ blk.applyNtoN(x, id, apply.fun, ind = NULL, fill = NA, ...)
   \code{blk.applyNtoN} returns a vector in
   \code{\link{block-format}} with respect to \code{id}.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
   \itemize{

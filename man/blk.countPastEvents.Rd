@@ -30,7 +30,7 @@ blk.countPastEvents(time, id, event.t = time, id2 = id)
     \code{id}.  The value indicates how events occurred prior to the
     corresponding \code{time}.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
   \itemize{

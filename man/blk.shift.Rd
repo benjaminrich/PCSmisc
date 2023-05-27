@@ -33,7 +33,7 @@ blk.shift(x, id, shift.by = 1, ind = NULL, fill = NA)
   A vector in \code{\link{block-format}} with respect to \code{id}
   containing the shifted values.
 }
-\author{Ben Rich <benjamin.rich@certara.com>}
+\author{Benjamin Rich <mail@benjaminrich.net>}
 
 \seealso{
   \itemize{

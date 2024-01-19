@@ -917,15 +917,15 @@ blk.addl <- function(ii, id, dose.ind, dose, tol.ii=1e-5, tol.dose=1e-5, min.con
     addl
 }
 
-# Description: Flags doses preceding a steady state event when no non-dose event has occurred between the two.
-blk.noninformativeDose <- function(id, dose.ind, ss.ind=NULL) {
+# Description: Flags doses preceding a steady state event when no observation event has occurred between the two.
+blk.noninformativeDose <- function(id, dose.ind, ss.ind=NULL, obs.ind=!dose.ind) {
     .checkID(id)
     x <- rep.int(FALSE, length(id))
     if (!is.null(ss.ind)) {
-        cons <- blk.findConsecutive(id, ind=dose.ind)
+        cons <- blk.findConsecutive(id, ind=!obs.ind)
         x[cons > 0] <- blk.untilLast(id=asID(cons[cons > 0]), ind=ss.ind[cons > 0], include.last=FALSE)
     }
-    x | blk.lastOnwards(id=id, ind=!dose.ind, include.last=FALSE)
+    dose.ind & (x | blk.lastOnwards(id=id, ind=obs.ind, include.last=FALSE))
 }
 
 blk.concomitant <- function(time, id, begin.exposure, end.exposure, id2=id) {

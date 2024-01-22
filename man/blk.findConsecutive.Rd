@@ -6,13 +6,14 @@
   group has a certain property.
 }
 \usage{
-blk.findConsecutive(id, ind, min.consec = 2)
+blk.findConsecutive(id, ind, min.consec = 2, fill = 0)
 }
 \arguments{
   \item{id}{A valid \code{\link{block-format}} ID.}
   \item{ind}{A logical vector in \code{\link{block-format}} with
   respect to \code{id} that designates rows in the data set for which the property holds.}
   \item{min.consec}{An integer specifying the minumum size of a group.}
+  \item{fill}{A value to use when no other value is appropriate.}
 }
 \details{
 
@@ -21,12 +22,13 @@ blk.findConsecutive(id, ind, min.consec = 2)
   function identifies groups of rows that all possess the property,
   are consecutive and have a minimum size \code{min.consec}.  All such
   groups of rows identified are assigned a unique integer ID.  All
-  remaining rows are given the value 0.
+  remaining rows are given the value \code{fill}.
 
 }
 \value{
   An integer vector in \code{\link{block-format}} with respect to \code{id}
-  containing a unique group ID for rows belonging to identified groups, and 0 otherwise.
+  containing a unique group ID for rows belonging to identified
+  groups, and \code{fill} otherwise.
 }
 \author{Benjamin Rich <mail@benjaminrich.net>}
 

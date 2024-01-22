@@ -837,7 +837,7 @@ blk.time.above.threshold <- function(x, y, threshold, id, id2=id, ind=NULL, fill
     z
 }
 
-blk.findConsecutive <- function(id, ind, min.consec=2) {
+blk.findConsecutive <- function(id, ind, min.consec=2, fill=0) {
     .checkID(id)
 
     y <- unlist(tapply(ind, id, .consecLengths, simplify=FALSE))
@@ -845,6 +845,8 @@ blk.findConsecutive <- function(id, ind, min.consec=2) {
     z[ind] <- rep(ifelse(y >= min.consec, 1, 0), times=y)
     y <- y[y >= min.consec]
     z[z==1] <- rep(.myseqalong(y), times=y)
+    z <- z - blk.applyNtoN(z-1, id, min, ind=(z > 0), fill=0)
+    z[z==0] <- fill
     z
 }
 
@@ -868,7 +870,7 @@ blk.isSteadyState <- function(time, id, dose.ind, dose.interval, tol, min.time.s
     ss
 
     #min.consec <- ceiling(min.time.ss/dose.interval)
-    #cons <- blk.findConsecutive(id, ind=((delta.dose == 0) & (abs(itime - dose.interval) <= tol)), min.consec=min.consec)
+    #cons <- blk.findConsecutive(id, ind=((delta.dose == 0) & (abs(itime - dose.interval) <= tol)), min.consec=min.consec, fill=0)
     #ss <- blk.shift(cons > 0, id=id, shift.by=min.consec-1, ind=cons > 0, fill=FALSE)
     #ss
 }
@@ -910,7 +912,7 @@ blk.addl <- function(ii, id, dose.ind, dose, tol.ii=1e-5, tol.dose=1e-5, min.con
         flag <- flag & blk.shift(dose.ind, id=id, shift.by= -1, fill=FALSE)
     }
 
-    cons <- blk.findConsecutive(id, ind=(dose.ind & flag), min.consec=min.consec)
+    cons <- blk.findConsecutive(id, ind=(dose.ind & flag), min.consec=min.consec, fill=0)
 
     addl <- ifelse(dose.ind, 0, NA)
     addl[cons>0] <- ifelse(blk.firstOnly(asID(cons[cons>0])), blk.count(id=asID(cons[cons>0])) - 1, -1)
@@ -922,7 +924,7 @@ blk.noninformativeDose <- function(id, dose.ind, ss.ind=NULL, obs.ind=!dose.ind)
     .checkID(id)
     x <- rep.int(FALSE, length(id))
     if (!is.null(ss.ind)) {
-        cons <- blk.findConsecutive(id, ind=!obs.ind)
+        cons <- blk.findConsecutive(id, ind=!obs.ind, fill=0)
         x[cons > 0] <- blk.untilLast(id=asID(cons[cons > 0]), ind=ss.ind[cons > 0], include.last=FALSE)
     }
     dose.ind & (x | blk.lastOnwards(id=id, ind=obs.ind, include.last=FALSE))

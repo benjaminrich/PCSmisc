@@ -942,6 +942,43 @@ blk.concomitant <- function(time, id, begin.exposure, end.exposure, id2=id) {
     y[temp$code==2]
 }
 
+blk.durationOfExposure <- function(begin.exposure, end.exposure, id, id2=id, diff.op="-", fill=0) {
+    .checkID(id)
+
+    if (length(begin.exposure) != length(end.exposure)) {
+        stop("begin.exposure and end.exposure must have the same length")
+    }
+
+    if (any(is.na(begin.exposure))) {
+        stop("begin.exposure contains missing values")
+    }
+
+    if (any(is.na(end.exposure))) {
+        stop("end.exposure contains missing values")
+    }
+
+    if (!all(diff.op(end.exposure, begin.exposure) >= 0)) {
+        stop("All begin.exposure must precede the corresponding end.exposure")
+    }
+
+    temp <- rbind(
+        data.frame(id=id, time=begin.exposure, code=0, x=1),
+        data.frame(id=id, time=end.exposure,   code=1, x=-1))
+
+    temp   <- temp[order(temp$id, temp$time, temp$code),]
+
+    temp$y <- blk.applyNtoN(temp$x, temp$id, cumsum)
+    temp$y <- blk.shift(temp$y, id=temp$id, fill=0)
+    temp$z <- blk.diff(temp$time, id=temp$id, diff.op=diff.op, fill=0)
+
+    res <- blk.applyNto1((temp$y > 0) * temp$z, temp$id, sum, fill=fill)
+
+    if (!is.null(id2)) {
+        res <- blk.repeatValue(res, id=asID(levels(id)), id2=id2, fill=fill)
+    }
+    res
+}
+
 blk.countPastEvents <- function(time, id, event.t=time, id2=id) {
     .checkID(id)
     .checkID(id2)

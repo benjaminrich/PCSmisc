@@ -1,8 +1,8 @@
 Package: PCSmisc
 Type: Package
 Title: Useful functions for longitudinal data set construction and manipulation.
-Version: 0.9.4
-Date: 2023-05-27
+Version: 0.9.5
+Date: 2026-01-29
 Author: Benjamin Rich <mail@benjaminrich.net>
 Maintainer: Benjamin Rich <mail@benjaminrich.net>
 Suggests: nlme

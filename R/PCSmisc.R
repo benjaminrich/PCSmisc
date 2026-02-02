@@ -1,4 +1,8 @@
-if (is.R()) {
+.is.R <- function() {
+       exists("version") && !is.null(vl <- version$language) && vl == "R"
+}
+
+if (.is.R()) {
     .myseqalong <- match.fun("seq_along")
     .mymatchfun <- match.fun
 
